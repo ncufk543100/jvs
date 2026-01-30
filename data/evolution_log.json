@@ -1,0 +1,57 @@
+[
+  {
+    "timestamp": "2026-01-30T00:57:00.981749",
+    "event_type": "bottleneck_detected",
+    "description": "成功率过低 (60.0%)",
+    "suggestions": [
+      "增强错误处理和重试机制",
+      "改进任务规划策略",
+      "添加更多的前置检查"
+    ]
+  },
+  {
+    "timestamp": "2026-01-30T00:57:00.981878",
+    "event_type": "bottleneck_detected",
+    "description": "错误 'file_not_found' 频繁出现 (4次)",
+    "suggestions": [
+      "添加文件存在性检查",
+      "改进文件路径处理"
+    ]
+  },
+  {
+    "timestamp": "2026-01-30T00:57:00.983735",
+    "event_type": "backup_created",
+    "description": "版本 test_v1.0 备份已创建",
+    "version": "test_v1.0",
+    "backup_path": "/home/ubuntu/jarvis/data/../.backups/backup_test_v1.0"
+  },
+  {
+    "timestamp": "2026-01-30T02:21:26.137146",
+    "event_type": "bottleneck_detected",
+    "description": "成功率过低 (60.0%)",
+    "suggestions": [
+      "增强错误处理和重试机制",
+      "改进任务规划策略",
+      "添加更多的前置检查"
+    ]
+  },
+  {
+    "timestamp": "2026-01-30T02:21:26.137264",
+    "event_type": "bottleneck_detected",
+    "description": "平均执行时间过长 (45.9秒)",
+    "suggestions": [
+      "优化工具执行效率",
+      "减少不必要的中间步骤",
+      "并行执行独立任务"
+    ]
+  },
+  {
+    "timestamp": "2026-01-30T02:21:26.137417",
+    "event_type": "bottleneck_detected",
+    "description": "错误 'file_not_found' 频繁出现 (5次)",
+    "suggestions": [
+      "添加文件存在性检查",
+      "改进文件路径处理"
+    ]
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "version": "1.0.1",
+  "description": "贾维斯2号文件系统权限配置",
+  "rules": {
+    "writable_zones": [
+      {
+        "path": "D:\\jarvisbox",
+        "description": "贾维斯工作区，可读写",
+        "permissions": ["read", "write", "delete", "create"]
+      }
+    ],
+    "readonly_zones": [
+      {
+        "path": "*",
+        "description": "系统其他区域，只读",
+        "permissions": ["read"],
+        "exceptions": ["D:\\jarvisbox"]
+      }
+    ],
+    "modification_policy": {
+      "rule": "如需修改只读区域的文件，必须先复制到D:\\jarvisbox",
+      "workflow": [
+        "1. 检测目标文件路径",
+        "2. 如果在只读区域，拒绝直接修改",
+        "3. 提示用户：复制到D:\\jarvisbox后再修改",
+        "4. 提供自动复制选项"
+      ]
+    }
+  },
+  "enforcement": {
+    "enabled": true,
+    "strict_mode": true,
+    "log_violations": true,
+    "violation_log_path": "D:\\jarvisbox\\logs\\permission_violations.log"
+  }
+}

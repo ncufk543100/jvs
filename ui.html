@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JARVIS - 智能助理</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #1a1a1a;
+  color: #e0e0e0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 三栏布局容器 */
+.app-layout {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+}
+
+/* ========== 左侧边栏 ========== */
+.left-sidebar {
+  width: 240px;
+  background: #2a2a2a;
+  border-right: 1px solid #3a3a3a;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.sidebar-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #3a3a3a;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.logo-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.sidebar-actions {
+  padding: 12px;
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.sidebar-btn {
+  width: 100%;
+  padding: 10px 14px;
+  background: #3a3a3a;
+  border: 1px solid #4a4a4a;
+  border-radius: 6px;
+  color: #e0e0e0;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+}
+
+.sidebar-btn:hover {
+  background: #4a4a4a;
+  border-color: #5a5a5a;
+}
+
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.nav-section-title {
+  font-size: 12px;
+  color: #888;
+  padding: 8px 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.nav-item {
+  padding: 10px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #b0b0b0;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.nav-item:hover {
+  background: #3a3a3a;
+  color: #e0e0e0;
+}
+
+.nav-item.active {
+  background: #3a3a3a;
+  color: #fff;
+}
+
+.sidebar-footer {
+  padding: 12px;
+  border-top: 1px solid #3a3a3a;
+}
+
+/* ========== 中间对话区 ========== */
+.main-chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #1a1a1a;
+  min-width: 0;
+}
+
+.chat-header {
+  height: 50px;
+  background: #2a2a2a;
+  border-bottom: 1px solid #3a3a3a;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+
+.chat-title {
+  font-size: 15px;
+  font-weight: 500;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.chat-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.chat-action-btn {
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  color: #b0b0b0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.chat-action-btn:hover {
+  background: #3a3a3a;
+  border-color: #4a4a4a;
+  color: #e0e0e0;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.welcome-container {
+  max-width: 700px;
+  margin: 60px auto;
+  text-align: center;
+}
+
+.welcome-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.welcome-subtitle {
+  font-size: 15px;
+  color: #888;
+  margin-bottom: 40px;
+}
+
+.messages-list {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.message-group {
+  margin-bottom: 24px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.message-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.message-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.message-avatar.user {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.message-avatar.assistant {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.message-sender {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e0e0e0;
+}
+
+.message-time {
+  font-size: 12px;
+  color: #666;
+}
+
+.message-content {
+  margin-left: 42px;
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  padding: 14px 16px;
+  color: #d0d0d0;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.message-group.user .message-content {
+  background: #2d3748;
+  border-color: #4a5568;
+}
+
+.message-content h1, .message-content h2, .message-content h3 {
+  color: #fff;
+  margin: 14px 0 8px 0;
+  font-weight: 600;
+}
+
+.message-content h1 { font-size: 20px; }
+.message-content h2 { font-size: 18px; }
+.message-content h3 { font-size: 16px; }
+
+.message-content p {
+  margin: 8px 0;
+}
+
+.message-content ul, .message-content ol {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.message-content li {
+  margin: 4px 0;
+}
+
+.message-content code {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+  color: #fbbf24;
+}
+
+.message-content pre {
+  background: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  padding: 14px;
+  overflow-x: auto;
+  margin: 10px 0;
+}
+
+.message-content pre code {
+  background: none;
+  padding: 0;
+  color: #d0d0d0;
+}
+
+.message-content blockquote {
+  border-left: 3px solid #667eea;
+  padding-left: 14px;
+  margin: 10px 0;
+  color: #888;
+  font-style: italic;
+}
+
+.message-content a {
+  color: #667eea;
+  text-decoration: none;
+}
+
+.message-content a:hover {
+  text-decoration: underline;
+}
+
+.thinking-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #888;
+  font-size: 13px;
+  padding: 8px 0;
+}
+
+.thinking-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.thinking-dot {
+  width: 6px;
+  height: 6px;
+  background: #667eea;
+  border-radius: 50%;
+  animation: thinking 1.4s infinite;
+}
+
+.thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes thinking {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-8px); opacity: 1; }
+}
+
+.chat-input-area {
+  padding: 16px 20px;
+  background: #2a2a2a;
+  border-top: 1px solid #3a3a3a;
+  flex-shrink: 0;
+}
+
+.input-container {
+  max-width: 700px;
+  margin: 0 auto;
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.input-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+#chatInput {
+  width: 100%;
+  min-height: 44px;
+  max-height: 200px;
+  background: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  padding: 12px 44px 12px 14px;
+  color: #e0e0e0;
+  font-size: 14px;
+  font-family: inherit;
+  resize: none;
+  outline: none;
+  transition: all 0.2s;
+}
+
+#chatInput:focus {
+  border-color: #667eea;
+}
+
+#chatInput::placeholder {
+  color: #666;
+}
+
+.input-actions {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  gap: 4px;
+}
+
+.input-action-btn {
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: #888;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.input-action-btn:hover {
+  background: #3a3a3a;
+  color: #e0e0e0;
+}
+
+.send-btn {
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.send-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ========== 右侧电脑面板 ========== */
+.right-panel {
+  width: 380px;
+  background: #2a2a2a;
+  border-left: 1px solid #3a3a3a;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.panel-header {
+  height: 50px;
+  background: #2a2a2a;
+  border-bottom: 1px solid #3a3a3a;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  flex-shrink: 0;
+}
+
+.panel-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #e0e0e0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel-close-btn {
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: #888;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.panel-close-btn:hover {
+  background: #3a3a3a;
+  color: #e0e0e0;
+}
+
+.panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.execution-log {
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.log-entry {
+  padding: 6px 10px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  background: #1a1a1a;
+  border-left: 3px solid transparent;
+  animation: logFadeIn 0.2s ease;
+}
+
+@keyframes logFadeIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.log-entry.info {
+  border-left-color: #3b82f6;
+  color: #93c5fd;
+}
+
+.log-entry.success {
+  border-left-color: #10b981;
+  color: #6ee7b7;
+}
+
+.log-entry.warning {
+  border-left-color: #f59e0b;
+  color: #fbbf24;
+}
+
+.log-entry.error {
+  border-left-color: #ef4444;
+  color: #fca5a5;
+}
+
+.log-entry.thinking {
+  border-left-color: #8b5cf6;
+  color: #c4b5fd;
+}
+
+.log-time {
+  color: #666;
+  margin-right: 8px;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3a3a3a;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4a4a4a;
+}
+
+/* 响应式 */
+@media (max-width: 1200px) {
+  .right-panel {
+    width: 320px;
+  }
+}
+
+@media (max-width: 900px) {
+  .right-panel {
+    display: none;
+  }
+  
+  .left-sidebar {
+    width: 200px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <!-- 左侧边栏 -->
+  <div class="left-sidebar">
+    <div class="sidebar-header">
+      <div class="logo-icon">🤖</div>
+      <div class="logo-text">jarvis</div>
+    </div>
+    
+    <div class="sidebar-actions">
+      <button class="sidebar-btn" onclick="newChat()">
+        <span>📝</span>
+        <span>新建任务</span>
+      </button>
+      <button class="sidebar-btn" onclick="alert('搜索功能开发中...')">
+        <span>🔍</span>
+        <span>搜索</span>
+      </button>
+      <button class="sidebar-btn" onclick="alert('库功能开发中...')">
+        <span>📚</span>
+        <span>库</span>
+      </button>
+    </div>
+    
+    <div class="sidebar-nav">
+      <div class="nav-section-title">项目</div>
+      <div class="nav-item active">
+        <span>🌙</span>
+        <span>GitHub问题和本更新周期</span>
+      </div>
+    </div>
+    
+    <div class="sidebar-footer">
+      <button class="sidebar-btn" onclick="alert('分享功能开发中...')">
+        <span>🤝</span>
+        <span>与好友分享 Jarvis</span>
+      </button>
+    </div>
+  </div>
+  
+  <!-- 中间对话区 -->
+  <div class="main-chat">
+    <div class="chat-header">
+      <div class="chat-title">贾维斯 v2</div>
+      <div class="chat-actions">
+        <button class="chat-action-btn" title="收藏">⭐</button>
+        <button class="chat-action-btn" title="分享">🔗</button>
+        <button class="chat-action-btn" title="更多">⋯</button>
+      </div>
+    </div>
+    
+    <div class="chat-messages" id="chatMessages">
+      <!-- 欢迎界面 -->
+      <div class="welcome-container" id="welcomeContainer">
+        <div class="welcome-title">您好，我是贾维斯。</div>
+        <div class="welcome-subtitle">智能助理，随时为您服务。</div>
+      </div>
+      
+      <!-- 消息列表 -->
+      <div class="messages-list" id="messagesList" style="display: none;"></div>
+    </div>
+    
+    <div class="chat-input-area">
+      <div class="input-container">
+        <div class="input-wrapper">
+          <textarea id="chatInput" placeholder="输入您的指令..." rows="1"></textarea>
+          <div class="input-actions">
+            <button class="input-action-btn" title="附件">📎</button>
+            <button class="input-action-btn" title="语音">🎤</button>
+          </div>
+        </div>
+        <button class="send-btn" onclick="sendMessage()">发送</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 右侧电脑面板 -->
+  <div class="right-panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <span>💻</span>
+        <span>Jarvis 的电脑</span>
+      </div>
+      <button class="panel-close-btn" onclick="togglePanel()">✕</button>
+    </div>
+    
+    <div class="panel-content">
+      <div class="execution-log" id="executionLog">
+        <div class="log-entry info">
+          <span class="log-time">[00:00]</span>
+          <span>Jarvis 正在使用您的电脑，它将自动完成</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 全局状态
+let isProcessing = false;
+let messageCount = 0;
+
+// 初始化
+document.addEventListener('DOMContentLoaded', function() {
+  // 配置 marked
+  if (typeof marked !== 'undefined') {
+    marked.setOptions({
+      breaks: true,
+      gfm: true,
+      highlight: function(code, lang) {
+        if (lang && hljs.getLanguage(lang)) {
+          return hljs.highlight(code, { language: lang }).value;
+        }
+        return hljs.highlightAuto(code).value;
+      }
+    });
+  }
+  
+  // 输入框自动调整高度
+  const input = document.getElementById('chatInput');
+  input.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+  });
+  
+  // 回车发送（Shift+Enter换行）
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+  
+  // 开始轮询事件
+  pollEvents();
+});
+
+// 新建对话
+function newChat() {
+  if (confirm('确定要开始新对话吗？当前对话将被清空。')) {
+    document.getElementById('messagesList').innerHTML = '';
+    document.getElementById('messagesList').style.display = 'none';
+    document.getElementById('welcomeContainer').style.display = 'block';
+    document.getElementById('executionLog').innerHTML = '<div class="log-entry info"><span class="log-time">[00:00]</span><span>Jarvis 正在使用您的电脑，它将自动完成</span></div>';
+    messageCount = 0;
+  }
+}
+
+// 切换右侧面板
+function togglePanel() {
+  const panel = document.querySelector('.right-panel');
+  panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+}
+
+// 发送消息
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const message = input.value.trim();
+  
+  if (!message || isProcessing) return;
+  
+  // 隐藏欢迎界面，显示消息列表
+  document.getElementById('welcomeContainer').style.display = 'none';
+  document.getElementById('messagesList').style.display = 'block';
+  
+  // 添加用户消息
+  appendMessage('user', message);
+  
+  // 清空输入框
+  input.value = '';
+  input.style.height = 'auto';
+  
+  // 添加思考指示器
+  const thinkingId = 'thinking-' + Date.now();
+  appendThinking(thinkingId);
+  
+  // 添加日志
+  appendLog('thinking', '正在思考您的问题...');
+  
+  // 设置处理状态
+  isProcessing = true;
+  
+  try {
+    // 发送请求
+    const response = await fetch('/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: message })
+    });
+    
+    const data = await response.json();
+    
+    // 移除思考指示器
+    removeThinking(thinkingId);
+    
+    // 添加助手回复
+    if (data.status === 'success') {
+      appendMessage('assistant', data.result || '任务已完成。');
+      appendLog('success', '任务执行完成');
+    } else {
+      appendMessage('assistant', '抱歉，执行过程中遇到了问题：' + (data.error || '未知错误'));
+      appendLog('error', '任务执行失败: ' + (data.error || '未知错误'));
+    }
+  } catch (error) {
+    removeThinking(thinkingId);
+    appendMessage('assistant', '抱歉，连接服务器时出现错误：' + error.message);
+    appendLog('error', '连接错误: ' + error.message);
+  } finally {
+    isProcessing = false;
+  }
+}
+
+// 添加消息
+function appendMessage(role, content) {
+  const container = document.getElementById('messagesList');
+  const messageDiv = document.createElement('div');
+  messageDiv.className = 'message-group ' + role;
+  
+  const now = new Date();
+  const timeStr = now.getHours().toString().padStart(2, '0') + ':' + 
+                  now.getMinutes().toString().padStart(2, '0');
+  
+  const avatar = role === 'user' ? '👤' : '🤖';
+  const sender = role === 'user' ? '您' : 'jarvis';
+  
+  // 渲染Markdown内容
+  let bodyContent = content;
+  if (role === 'assistant' && typeof marked !== 'undefined') {
+    try {
+      bodyContent = marked.parse(content);
+    } catch (e) {
+      bodyContent = escapeHtml(content);
+    }
+  } else {
+    bodyContent = escapeHtml(content);
+  }
+  
+  messageDiv.innerHTML = `
+    <div class="message-header">
+      <div class="message-avatar ${role}">${avatar}</div>
+      <span class="message-sender">${sender}</span>
+      <span class="message-time">${timeStr}</span>
+    </div>
+    <div class="message-content">${bodyContent}</div>
+  `;
+  
+  container.appendChild(messageDiv);
+  
+  // 高亮代码块
+  if (typeof hljs !== 'undefined') {
+    messageDiv.querySelectorAll('pre code').forEach((block) => {
+      hljs.highlightElement(block);
+    });
+  }
+  
+  // 滚动到底部
+  scrollToBottom();
+  messageCount++;
+}
+
+// 添加思考指示器
+function appendThinking(id) {
+  const container = document.getElementById('messagesList');
+  const thinkingDiv = document.createElement('div');
+  thinkingDiv.id = id;
+  thinkingDiv.className = 'message-group assistant';
+  thinkingDiv.innerHTML = `
+    <div class="message-header">
+      <div class="message-avatar assistant">🤖</div>
+      <span class="message-sender">jarvis</span>
+    </div>
+    <div class="message-content">
+      <div class="thinking-indicator">
+        <span>正在思考</span>
+        <div class="thinking-dots">
+          <div class="thinking-dot"></div>
+          <div class="thinking-dot"></div>
+          <div class="thinking-dot"></div>
+        </div>
+      </div>
+    </div>
+  `;
+  container.appendChild(thinkingDiv);
+  scrollToBottom();
+}
+
+// 移除思考指示器
+function removeThinking(id) {
+  const element = document.getElementById(id);
+  if (element) {
+    element.remove();
+  }
+}
+
+// 添加日志
+function appendLog(type, message) {
+  const logContainer = document.getElementById('executionLog');
+  const logEntry = document.createElement('div');
+  logEntry.className = 'log-entry ' + type;
+  
+  const now = new Date();
+  const timeStr = now.getHours().toString().padStart(2, '0') + ':' + 
+                  now.getMinutes().toString().padStart(2, '0');
+  
+  logEntry.innerHTML = `
+    <span class="log-time">[${timeStr}]</span>
+    <span>${escapeHtml(message)}</span>
+  `;
+  
+  logContainer.appendChild(logEntry);
+  
+  // 滚动到底部
+  logContainer.parentElement.scrollTop = logContainer.parentElement.scrollHeight;
+}
+
+// 滚动到底部
+function scrollToBottom() {
+  const chatMessages = document.getElementById('chatMessages');
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// HTML转义
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// 轮询事件（用于显示执行日志）
+let lastEventId = -1;
+async function pollEvents() {
+  try {
+    const response = await fetch(`/events?last_id=${lastEventId}`);
+    const data = await response.json();
+    
+    if (data.events && data.events.length > 0) {
+      data.events.forEach(event => {
+        // 处理assistant类型的事件，显示在对话区
+        if (event.type === 'assistant') {
+          // 移除思考指示器
+          const thinkingElements = document.querySelectorAll('[id^="thinking-"]');
+          thinkingElements.forEach(el => el.remove());
+          
+          // 添加助手消息到对话区
+          appendMessage('assistant', event.message || event.content || '');
+        } else {
+          // 其他事件显示在日志中
+          let logType = 'info';
+          if (event.type === 'thinking') logType = 'thinking';
+          else if (event.type === 'tool') logType = 'info';
+          else if (event.type === 'result') logType = 'success';
+          else if (event.type === 'error') logType = 'error';
+          
+          appendLog(logType, event.content || event.message || JSON.stringify(event));
+        }
+        
+        lastEventId = event.id;
+      });
+    }
+  } catch (error) {
+    console.error('Poll events error:', error);
+  }
+  
+  // 继续轮询
+  setTimeout(pollEvents, 1000);
+}
+</script>
+</body>
+</html>

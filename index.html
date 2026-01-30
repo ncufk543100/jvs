@@ -1,0 +1,45 @@
+﻿<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>Agent Loop</title>
+<style>
+body { font-family: monospace; padding: 20px; }
+textarea { width: 100%; height: 80px; }
+pre { background: #111; color: #0f0; padding: 10px; }
+button { padding: 8px 16px; }
+</style>
+</head>
+<body>
+
+<h2>Agent 对话</h2>
+
+<textarea id="msg" placeholder="输入你的指令..."></textarea><br><br>
+<button onclick="run()">执行</button>
+
+<h3>状态</h3>
+<pre id="status">idle</pre>
+
+<script>
+async function run() {
+  const msg = document.getElementById('msg').value;
+  await fetch('/run', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: msg })
+  });
+}
+
+async function poll() {
+  try {
+    const r = await fetch('/status');
+    const j = await r.json();
+    document.getElementById('status').innerText = j.status;
+  } catch {}
+}
+
+setInterval(poll, 1000);
+</script>
+
+</body>
+</html>

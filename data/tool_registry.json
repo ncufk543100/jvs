@@ -1,0 +1,76 @@
+{
+  "tools": [
+    {
+      "name": "write_file",
+      "description": "写入文件内容（覆盖模式）",
+      "category": "file",
+      "parameters": {
+        "path": {
+          "type": "string",
+          "required": true,
+          "description": "文件路径（写入时必须在 /home/ubuntu/jarvis/ 目录内）"
+        },
+        "content": {
+          "type": "string",
+          "required": true,
+          "description": "文件内容"
+        }
+      },
+      "returns": "执行结果 {success: bool, message: str}",
+      "examples": [
+        "{\"path\": \"/home/ubuntu/jarvis/test.py\", \"content\": \"print(\\\"Hello\\\")\"}",
+        "{\"path\": \"/home/ubuntu/jarvis/data.txt\", \"content\": \"Some data\"}"
+      ],
+      "efficiency_score": 1.0,
+      "limitations": [
+        "只能写入项目目录内的文件",
+        "会覆盖现有文件"
+      ]
+    },
+    {
+      "name": "read_file",
+      "description": "读取文件内容",
+      "category": "file",
+      "parameters": {
+        "path": {
+          "type": "string",
+          "required": true,
+          "description": "文件路径（可以读取系统任意位置的文件）"
+        }
+      },
+      "returns": "文件内容或错误信息",
+      "examples": [
+        "{\"path\": \"/home/ubuntu/jarvis/test.py\"}",
+        "{\"path\": \"/etc/hostname\"}",
+        "{\"path\": \"~/.bashrc\"}"
+      ],
+      "efficiency_score": 1.0,
+      "limitations": [
+        "需要文件读取权限"
+      ]
+    },
+    {
+      "name": "run_shell",
+      "description": "执行Shell命令",
+      "category": "shell",
+      "parameters": {
+        "command": {
+          "type": "string",
+          "required": true,
+          "description": "要执行的Shell命令"
+        }
+      },
+      "returns": "命令输出或错误信息",
+      "examples": [
+        "{\"command\": \"python3 test.py\"}",
+        "{\"command\": \"ls -la\"}",
+        "{\"command\": \"cat file.txt | grep error\"}"
+      ],
+      "efficiency_score": 1.2,
+      "limitations": [
+        "需要命令执行权限",
+        "某些命令可能需要sudo"
+      ]
+    }
+  ]
+}
