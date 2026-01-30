@@ -1,1 +1,0 @@
-TBD: implement v1.9.0 parallel evolution core module with deterministic scheduling, state transitions, persistence hooks, and concurrency-safe primitives; no comments.

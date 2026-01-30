@@ -1,5 +1,0 @@
-{
-  "root": "/home/ubuntu/clawedbot",
-  "include": ["**/*.ts", "**/*.js", "**/*.vue", "**/*.py", "**/*.json", "**/*.md", "**/*.html"],
-  "exclude": ["**/node_modules/**", "**/.git/**", "**/.venv/**", "**/dist/**", "**/build/**", "**/__pycache__/**"]
-}

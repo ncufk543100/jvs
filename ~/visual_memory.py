@@ -1,1 +1,0 @@
-TBD: implement v1.9.0 visual memory core module with multimodal artifact indexing, perceptual hashing, temporal linking, retrieval scoring, and storage abstraction; no comments.
