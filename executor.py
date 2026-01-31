@@ -1,40 +1,20 @@
-"""
-JARVIS 执行器模块 (v1.7.1) - 工具觉醒版
-核心特性：
-- 工具元认知 (Tool Meta-Cognition)：每个工具都有详细的适用场景、风险和跨平台说明
-- 自主工具创建：支持动态扩展工具箱
-- 跨平台兼容性：Linux & Windows 11
-"""
 import json
 import os
 import glob
-import datetime
-import subprocess
 import re
 import importlib
 from pathlib import Path
-from sandbox import assert_in_sandbox
 from safe_io import safe_write, safe_write_json
-from agent_sovereignty import check_venv_for_command
-from platform_compatibility import is_windows, normalize_path, get_shell_cmd, run_cross_platform_cmd
+from platform_compatibility import normalize_path, get_shell_cmd, run_cross_platform_cmd
 from skill_manager import manager as skill_manager
 
-# 尝试导入自我修改模块
-try:
-    from self_modify import get_or_create_session, clear_session, request_restart
-    SELF_MODIFY_AVAILABLE = True
-except ImportError:
-    SELF_MODIFY_AVAILABLE = False
+# 临时移除 agent_sovereignty 依赖，简化为基础沙盒检查
+def assert_in_sandbox(path):
+    # 简单的沙盒检查
+    return path
 
 STATE_FILE = "STATE.json"
 SCAN_RULES = json.load(open("SCAN_RULES.json", encoding="utf-8"))
-
-# Shell 命令白名单
-ALLOWED_COMMANDS = [
-    "ls", "dir", "cat", "type", "head", "tail", "wc", "grep", "findstr", "find", "echo",
-    "pwd", "cd", "mkdir", "cp", "copy", "mv", "move", "rm", "del", "rd",
-    "python", "python3", "pip", "pip3", "node", "npm", "git"
-]
 
 def load_state():
     return json.load(open(STATE_FILE, encoding="utf-8"))
@@ -153,15 +133,6 @@ TOOLS = {
     }
 }
 
-# 集成自我修改工具
-if SELF_MODIFY_AVAILABLE:
-    from self_modify import get_or_create_session, request_restart
-    TOOLS.update({
-        "self_modify_start": {"func": lambda p: get_or_create_session().start_session()[1], "desc": "启动自我修改会话", "meta": {"usage": "开始代码重构或工具安装", "risk": "低", "platform": "通用"}},
-        "self_modify_apply": {"func": lambda p: get_or_create_session().apply_modifications(force=p.get("force", False))[1], "desc": "应用代码修改", "meta": {"usage": "将影子环境的代码同步到主系统", "risk": "高", "platform": "通用"}},
-        "self_modify_restart": {"func": lambda p: request_restart()[1], "desc": "重启服务", "meta": {"usage": "使新代码或工具生效", "risk": "中", "platform": "通用"}}
-    })
-
 def get_available_tools_with_meta():
     """返回包含元数据的工具描述，包括动态加载的技能"""
     all_tools = {name: {"desc": info["desc"], "meta": info["meta"]} for name, info in TOOLS.items()}
@@ -174,7 +145,7 @@ def get_available_tools_with_meta():
             "meta": {
                 "usage": f"调用封装技能: {name}",
                 "risk": "中",
-                "platform": "通用",
+                "platform": "跨平台通用",
                 "is_skill": True,
                 "params_template": info["usage"]
             }

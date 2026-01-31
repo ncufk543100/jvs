@@ -1,0 +1,1 @@
+{"include": ["*.py", "*.js", "*.json", "*.md", "*.txt"], "exclude": ["node_modules", "__pycache__", ".git", "venv"]}

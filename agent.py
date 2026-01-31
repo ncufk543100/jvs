@@ -1,106 +1,110 @@
-"""
-JARVIS 智能代理模块 (v1.7.1) - 工具觉醒版
-"""
 import json
-import threading
 import re
 import time
-import uuid
-from pathlib import Path
-from typing import Optional, List, Dict, Any
-
-# 导入跨平台工具
-from platform_compatibility import normalize_path, is_windows
+import os
+import sys
+import hashlib
 from llm import think, chat
 from executor import execute, get_available_tools_with_meta
 from run_lock import acquire, release
-from safe_io import safe_write_json, safe_read_json
-from event_bus import emit
-
-# 文件路径归一化
-_ROOT = Path(__file__).parent.absolute()
-STATE_FILE = normalize_path(_ROOT / "STATE.json")
-PLAN_FILE = normalize_path(_ROOT / "PLAN.json")
-MEMORY_FILE = normalize_path(_ROOT / "CHAT_MEMORY.json")
-
-# 配置
-MAX_ITERATIONS = 10
-
-def load_memory() -> dict:
-    default = {"history": [], "context": {}}
-    return safe_read_json(MEMORY_FILE, default=default)
-
-def create_dynamic_plan(goal: str, memory: dict) -> dict:
-    """根据用户目标制定计划"""
-    tools_with_meta = get_available_tools_with_meta()
-    tools_desc = json.dumps(tools_with_meta, ensure_ascii=False, indent=2)
-    
-    prompt = f"""你是一个智能代理。请分析用户目标并制定执行计划。
-可用工具：
-{tools_desc}
-
-用户目标：
-{goal}
-
-请务必只返回 JSON 格式的计划，格式如下：
-{{
-    "understanding": "对目标的理解",
-    "steps": [
-        {{"tool": "工具名", "params": {{"参数名": "值"}}, "description": "步骤描述"}}
-    ]
-}}
-"""
-    try:
-        response = think(prompt)
-        # 增强 JSON 提取逻辑，处理 R1 可能带有的 Markdown 标签
-        json_match = re.search(r'(\{[\s\S]*\})', response)
-        if json_match:
-            return json.loads(json_match.group(1))
-    except Exception as e:
-        print(f"[PLAN] 失败: {e}")
-    return {"understanding": goal, "steps": []}
+from knowledge_base import save_experience, get_relevant_knowledge
 
 def run_agent(goal: str) -> str:
-    """运行智能代理"""
-    if not acquire():
-        return "⚠️ 另一个任务正在运行中..."
+    """
+    JARVIS v3.1.0 "Sovereign": 集成 OpenClaw 核心灵魂的自主进化引擎。
+    """
+    if len(goal.strip()) <= 4:
+        return chat(f"用户指令：'{goal}'。请以贾维斯身份询问具体需求。")
+
+    if not acquire(): return "⚠️ 任务占用中"
+    
+    # 初始化任务上下文
+    iteration = 0
+    max_iterations = 20
+    history_steps = []
+    
+    print(f"\n🌟 [JARVIS v3.1.0 启动] 目标: {goal}")
     
     try:
-        emit("status", f"🚀 贾维斯启动")
-        iteration = 0
-        
-        while iteration < MAX_ITERATIONS:
+        while iteration < max_iterations:
             iteration += 1
-            emit("status", f"📋 正在进行第 {iteration} 次尝试...")
+            print(f"\n🚀 [第 {iteration}/{max_iterations} 轮自主迭代]")
             
-            plan = create_dynamic_plan(goal, {})
-            steps = plan.get("steps", [])
+            # 1. 检索历史经验 (OpenClaw 核心逻辑)
+            relevant_exp = get_relevant_knowledge(goal)
             
-            if not steps:
-                # 如果没有步骤，直接对话回复
-                response = chat(goal)
-                emit("assistant", response)
-                return response
-            
-            for step in steps:
-                tool = step.get("tool")
-                params = step.get("params", {})
-                desc = step.get("description", "")
+            # 2. 构建增强型 Prompt
+            tools_desc = json.dumps(get_available_tools_with_meta(), ensure_ascii=False)
+            prompt = f"""
+### 任务目标
+{goal}
+
+### 历史经验参考 (来自 KNOWLEDGE_BASE)
+{relevant_exp}
+
+### 当前可用工具 (含已学习技能)
+{tools_desc}
+
+### 行为准则
+1. 观察：在执行写操作前，先观察目录结构和文件状态。
+2. 反思：如果连续失败，必须在 reflection 中分析原因并更换工具或路径。
+3. 进化：如果任务复杂，尝试使用 learn_skill 封装新能力。
+
+请返回 JSON 格式：
+{{
+  "thought": "当前局势深度分析",
+  "reflection": "对上一轮行动的反思（若是第一轮则写规划）",
+  "steps": [{{"tool": "...", "params": {{}}, "description": "..."}}],
+  "is_finished": false
+}}
+"""
+            try:
+                raw_response = think(prompt)
+                json_match = re.search(r'(\{[\s\S]*\})', raw_response)
+                if not json_match: continue
                 
-                emit("thinking", f"🛠️ 执行: {desc}")
-                result = execute(f"RUN {json.dumps({'tool': tool, 'params': params})}")
-                emit("status", f"✅ 完成: {tool}")
+                plan = json.loads(json_match.group(1))
+                thought = plan.get("thought", "")
+                reflection = plan.get("reflection", "")
+                steps = plan.get("steps", [])
                 
-            # 简单逻辑：执行完所有步骤后，生成最终回复
-            final_prompt = f"用户目标：{goal}\n执行结果：已完成上述步骤。请给用户一个最终回复。"
-            response = chat(final_prompt)
-            emit("assistant", response)
-            return response
+                print(f"🧠 思考: {thought}")
+                print(f"📝 反思: {reflection}")
+                
+                if plan.get("is_finished"):
+                    print("🏁 贾维斯判定任务已完美达成。")
+                    save_experience(goal, history_steps, True, reflection)
+                    break
+                
+                # 3. 执行并记录
+                for step in steps:
+                    desc = step.get("description", "执行操作")
+                    print(f"🛠️ 执行: {desc}")
+                    result = execute(f"RUN {json.dumps(step)}")
+                    
+                    step_record = {"tool": step.get("tool"), "desc": desc, "result": result}
+                    history_steps.append(step_record)
+                    
+                    # 将执行结果反馈给下一轮
+                    relevant_exp += f"\n最近操作({desc}): {result}"
+
+            except Exception as e:
+                print(f"⚠️ 运行异常: {e}")
+                time.sleep(2)
+                
+        if iteration >= max_iterations:
+            print("🚨 达到理智熔断上限。")
+            save_experience(goal, history_steps, False, "任务超时，未能完成。")
             
-        return "任务达到最大迭代次数。"
-    except Exception as e:
-        error_msg = f"❌ 异常: {str(e)}"
-        emit("error", error_msg)
-        return error_msg
+        # 4. 生成结项报告
+        report_prompt = f"任务结束。目标: {goal}\n过程记录: {json.dumps(history_steps[-10:], ensure_ascii=False)}\n请向用户汇报。"
+        final_report = chat(report_prompt)
+        print(f"\n🤖 贾维斯: {final_report}")
+        return final_report
+        
     finally:
         release()
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        run_agent(" ".join(sys.argv[1:]))
