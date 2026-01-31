@@ -1,0 +1,4 @@
+{
+  "scan_files": ["executor.py"],
+  "tool_pattern": "def {tool_name}("
+}
